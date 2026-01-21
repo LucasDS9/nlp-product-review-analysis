@@ -1,0 +1,65 @@
+Ao inves de dropar reviews com poucos Helpfulness Denominator (como 5) segmentar por confiança, abaixo de 5 a llm dirá 
+a quantidade de reviews e quantas pessoas confirmaram e dirá se a análise é pouco confiavel ou muito confiavel. 
+Iremos dropar apenas quando helpfulness_score é nulo (Ou não tem reviews, ou ninguem aprovou a review)
+
+A llm irá fazer também uma sentiment analysis e irá dar um adjetivo ao produto com base nas reviews.
+
+Relação timestamp × helpfulness (insight avançado)
+
+Você pode descobrir:
+
+Reviews antigas tendem a ter helpfulness maior
+
+Reviews recentes ainda não receberam votos
+
+A llm saberá isso.
+
+
+Com a timestamp -> data podemos : 
+sentimento ao longo do tempo, ex : "O produto tinha reviews negativas no lançamento, mas melhorou após 2012."
+aumento de reclamações no tempo.
+Produto X:
+- Reviews antigas: ⭐⭐⭐⭐☆
+- Reviews recentes: ⭐⭐☆☆☆
+
+Agrupar usuários por produtos comprados, por score
+
+
+
+
+
+Motivação do uso de TF-IDF e Word2Vec
+
+Neste projeto, TF-IDF e Word2Vec são utilizados como técnicas de NLP clássico para extrair informação relevante dos 
+textos antes da aplicação de modelos de linguagem (LLMs). O TF-IDF permite identificar palavras estatisticamente 
+importantes, destacando termos que diferenciam produtos e avaliações ao longo do dataset. Já o Word2Vec captura 
+relações semânticas entre palavras, possibilitando a identificação de temas e reclamações semelhantes mesmo quando 
+expressas com vocabulário diferente. Essa etapa intermediária é essencial porque LLMs são mais eficazes na 
+interpretação e síntese de informações do que na análise estatística global de grandes volumes de texto. 
+Ao fornecer à LLM termos relevantes, padrões semânticos e métricas agregadas, o modelo atua como interpretador dos dados
+, reduzindo ruído, custo computacional e risco de alucinação, além de tornar os insights mais confiáveis e reproduzíveis.
+
+
+
+vamos la, antes da estrutura final para dexiar pronta para llm, vamos para o proximo passo, e quero que voce me guie 
+pois é meu primeiro projeto de nlp. Quero que meu llm consiga me dar tais informacoes no prompt : A quantidade de 
+reviews do produto em questão, llm irá fazer também uma sentiment analysis e irá dar um adjetivo ao produto com base 
+nas reviews entre [negativo, normal e positivo] , sentimento ao longo do tempo, ex : "O produto tinha reviews 
+negativas no lançamento, mas melhorou após 2012.", Produto X: - Reviews antigas: ⭐⭐⭐⭐☆ - Reviews recentes: 
+⭐⭐☆☆☆, top 5 usuarios que mais compraram o produto, score medio total, uma overview geral sobre o produto ex : 
+Em geral o produto foi bem avaliado... ou foi muito reclamado. também quero principais reclamacoes (Apenas reclamacoes)
+ . Como posso fazer isso? devo dar as informacoes pro llm (feed?)
+
+
+
+ [ Dataset ]
+     ↓
+[ NLP + Métricas por produto ]
+     ↓
+[ JSON por produto ]
+     ↓
+[ Função: get_product_review(product_id) ]
+     ↓
+[ Prompt + LLM ]
+     ↓
+[ Texto final ]
