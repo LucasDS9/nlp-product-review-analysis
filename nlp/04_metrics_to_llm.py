@@ -3,17 +3,12 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
-# ===============================
-# PATHS
-# ===============================
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_PATH = BASE_DIR / "data" / "text_preprocessed.csv"
 OUTPUT_PATH = BASE_DIR / "data" / "metrics_for_llm.csv"
 
 
-# ===============================
-# LOAD DATA
-# ===============================
+
 data = pd.read_csv(DATA_PATH)
 
 required_cols = ["ProductId", "Score", "Text_processed"]
@@ -22,9 +17,6 @@ if missing:
     raise ValueError(f"Colunas ausentes no dataset: {missing}")
 
 
-# ===============================
-# REVIEW-LEVEL SENTIMENT
-# ===============================
 def review_sentiment(score: float) -> str:
     if score <= 2.5:
         return "negative"
@@ -37,9 +29,6 @@ def review_sentiment(score: float) -> str:
 data["review_sentiment"] = data["Score"].apply(review_sentiment)
 
 
-# ===============================
-# BASIC PRODUCT METRICS
-# ===============================
 product_metrics = (
     data
     .groupby("ProductId")
@@ -51,9 +40,6 @@ product_metrics = (
 )
 
 
-# ===============================
-# SENTIMENT DISTRIBUTION (%)
-# ===============================
 sentiment_counts = (
     data
     .groupby(["ProductId", "review_sentiment"])
@@ -74,9 +60,6 @@ sentiment_perc.rename(columns={
 }, inplace=True)
 
 
-# ===============================
-# PRODUCT SENTIMENT (DERIVED)
-# ===============================
 def product_sentiment(row) -> str:
     if row["perc_negative"] > row["perc_positive"]:
         return "negativo"
@@ -91,9 +74,6 @@ sentiment_perc["product_sentiment"] = sentiment_perc.apply(
 )
 
 
-# ===============================
-# TF-IDF PER PRODUCT (ALL REVIEWS)
-# ===============================
 def extract_tfidf_keywords(df: pd.DataFrame, n_terms: int = 8) -> pd.Series:
     if len(df) < 3:
         return pd.Series({"tfidf_keywords": None})
@@ -134,9 +114,6 @@ tfidf_keywords = (
 )
 
 
-# ===============================
-# FINAL MERGE
-# ===============================
 final_df = (
     product_metrics
     .merge(sentiment_perc, on="ProductId", how="left")
@@ -144,9 +121,6 @@ final_df = (
 )
 
 
-# ===============================
-# SAVE
-# ===============================
 final_df.to_csv(OUTPUT_PATH, index=False)
 
 print("✅ Métricas prontas para LLM!")

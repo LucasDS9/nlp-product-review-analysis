@@ -2,10 +2,12 @@ from pathlib import Path
 import pandas as pd
 import subprocess
 import json
+import sys
 
-# ===============================
-# PATHS
-# ===============================
+sys.stdout.reconfigure(encoding="utf-8", errors="ignore")
+sys.stderr.reconfigure(encoding="utf-8", errors="ignore")
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_PATH = BASE_DIR / "data" / "metrics_for_llm.csv"
 PROMPT_PATH = BASE_DIR / "llm" / "prompt_product_overview.txt"
@@ -14,24 +16,15 @@ REPORTS_DIR = BASE_DIR / "reports"
 REPORTS_DIR.mkdir(exist_ok=True)
 
 
-# ===============================
-# LOAD DATA
-# ===============================
 df = pd.read_csv(DATA_PATH)
 
 
-# ===============================
-# LIST PRODUCTS
-# ===============================
 def list_products():
     print("\n📦 Produtos disponíveis:\n")
     for pid in df["ProductId"].unique():
         print(f"- {pid}")
 
 
-# ===============================
-# BUILD PROMPT
-# ===============================
 def build_prompt(product_id: str) -> str:
     row = df[df["ProductId"] == product_id]
 
@@ -43,26 +36,28 @@ def build_prompt(product_id: str) -> str:
     with open(PROMPT_PATH, "r", encoding="utf-8") as f:
         base_prompt = f.read()
 
-    return base_prompt.format(product_data=json.dumps(product_data, indent=2))
+    return base_prompt.format(
+        product_data=json.dumps(product_data, indent=2, ensure_ascii=False)
+    )
 
 
-# ===============================
-# CALL OLLAMA
-# ===============================
 def call_llama(prompt: str, model: str = "llama3.1:8b") -> str:
     process = subprocess.run(
         ["ollama", "run", model],
         input=prompt,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
-        capture_output=True
+        encoding="utf-8",
+        errors="ignore"
     )
 
-    return process.stdout
+    if process.stderr:
+        print("⚠️ Avisos do Ollama:")
+        print(process.stderr)
 
+    return process.stdout.strip()
 
-# ===============================
-# MAIN
-# ===============================
 if __name__ == "__main__":
     list_products()
 

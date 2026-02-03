@@ -12,6 +12,7 @@ Your tasks:
 Use a professional, analytical tone.
 Do NOT invent data.
 Base your analysis strictly on the provided metrics.
+Be assertive, appear confident
 
 Product data:
 {product_data}
