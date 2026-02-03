@@ -49,6 +49,50 @@ Em um ambiente corporativo, este projeto pode ser aplicado para:
 
 O resultado final é um sistema projetado para gerar **informações prontas para consumo executivo**, indo além de análises puramente técnicas.
 
+--- 
+## Requisitos
+
+Antes de executar o projeto, certifique-se de ter:
+
+- Python 3.10+
+- Ollama instalado e rodando localmente  
+  https://ollama.com
+- Bibliotecas Python listadas em `requirements.txt`
+
+### Modelo LLM
+Este projeto utiliza um LLM rodando localmente via **Ollama**.  
+Após instalar o Ollama, baixe o modelo:
+
+(bash): 
+ollama pull llama3.1:8b
+
+
+## Como usar
+
+### Execução via script (análise automática)
+
+1. **Instale as dependências**:
+(bash):
+pip install -r requirements.txt
+
+**Execução via Streamlit (interface interativa)**
+Inicie a aplicação: streamlit run app/app.py
+Acesse o link exibido no terminal (ex: http://localhost:8501).
+
+Selecione o produto desejado e clique em Gerar análise.
+
+A análise será exibida diretamente na interface.
+
+**Execução no arquivo python :**
+- Execute o arquivo:
+llm/analyze_product.py
+- Selecione um ProductId na lista exibida no terminal.
+
+- O modelo irá gerar a análise automaticamente e o relatório será salvo em: reports/
+
+
+
+--- 
 
 --- 
 
