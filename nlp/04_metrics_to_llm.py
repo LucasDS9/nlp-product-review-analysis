@@ -8,7 +8,6 @@ DATA_PATH = BASE_DIR / "data" / "text_preprocessed.csv"
 OUTPUT_PATH = BASE_DIR / "data" / "metrics_for_llm.csv"
 
 
-
 data = pd.read_csv(DATA_PATH)
 
 required_cols = ["ProductId", "Score", "Text_processed"]
@@ -16,11 +15,10 @@ missing = set(required_cols) - set(data.columns)
 if missing:
     raise ValueError(f"Colunas ausentes no dataset: {missing}")
 
-
 def review_sentiment(score: float) -> str:
-    if score <= 2.5:
+    if score <= 2:
         return "negative"
-    elif score < 4.5:
+    elif score <= 3:
         return "neutral"
     else:
         return "positive"
@@ -47,6 +45,10 @@ sentiment_counts = (
     .unstack(fill_value=0)
 )
 
+sentiment_counts = sentiment_counts.reindex(
+    columns=["negative", "neutral", "positive"], fill_value=0
+)
+
 sentiment_perc = (
     sentiment_counts
     .div(sentiment_counts.sum(axis=1), axis=0)
@@ -55,18 +57,18 @@ sentiment_perc = (
 
 sentiment_perc.rename(columns={
     "negative": "perc_negative",
-    "neutral": "perc_neutral",
+    "neutral":  "perc_neutral",
     "positive": "perc_positive"
 }, inplace=True)
 
 
 def product_sentiment(row) -> str:
-    if row["perc_negative"] > row["perc_positive"]:
-        return "negativo"
-    elif row["perc_positive"] > 0.5:
-        return "positivo"
-    else:
-        return "normal"
+    sentiments = {
+        "negative": row["perc_negative"],
+        "neutral":  row["perc_neutral"],
+        "positive": row["perc_positive"],
+    }
+    return max(sentiments, key=sentiments.get)
 
 
 sentiment_perc["product_sentiment"] = sentiment_perc.apply(
@@ -74,9 +76,10 @@ sentiment_perc["product_sentiment"] = sentiment_perc.apply(
 )
 
 
+
 def extract_tfidf_keywords(df: pd.DataFrame, n_terms: int = 8) -> pd.Series:
     if len(df) < 3:
-        return pd.Series({"tfidf_keywords": None})
+        return pd.Series({"tfidf_keywords": ""})
 
     tfidf = TfidfVectorizer(
         min_df=2,
@@ -88,7 +91,7 @@ def extract_tfidf_keywords(df: pd.DataFrame, n_terms: int = 8) -> pd.Series:
     try:
         X = tfidf.fit_transform(df["Text_processed"])
     except ValueError:
-        return pd.Series({"tfidf_keywords": None})
+        return pd.Series({"tfidf_keywords": ""})
 
     terms = tfidf.get_feature_names_out()
     scores = X.mean(axis=0).A1
@@ -101,9 +104,7 @@ def extract_tfidf_keywords(df: pd.DataFrame, n_terms: int = 8) -> pd.Series:
         .tolist()
     )
 
-    return pd.Series({
-        "tfidf_keywords": ", ".join(keywords)
-    })
+    return pd.Series({"tfidf_keywords": ", ".join(keywords)})
 
 
 tfidf_keywords = (
@@ -114,14 +115,19 @@ tfidf_keywords = (
 )
 
 
+
 final_df = (
     product_metrics
     .merge(sentiment_perc, on="ProductId", how="left")
     .merge(tfidf_keywords, on="ProductId", how="left")
 )
 
-
 final_df.to_csv(OUTPUT_PATH, index=False)
+
+
+sem_keywords = (final_df["tfidf_keywords"] == "").sum()
+if sem_keywords:
+    print(f"⚠️  {sem_keywords} produto(s) sem keywords (menos de 3 reviews).")
 
 print("✅ Métricas prontas para LLM!")
 print(f"📁 Arquivo salvo em: {OUTPUT_PATH}")
